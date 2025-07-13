@@ -1,0 +1,152 @@
+menu = """
+    [d] depositar
+    [s] sacar
+    [e] extrato
+    [c] conta
+    [u] usuario
+    [l] listar contas
+    [q] sair
+    Digite a opção desejada: """
+
+saldo = 0
+extrato = ""
+limite = 500
+numero_saques = 0
+
+LIMITE_SAQUES = 3
+AGENCIA = "0001"
+usuarios = []
+contas = []
+contador = 0  # Contador para o número de contas criadas
+
+
+def depositar_valor(valor, /):
+    global saldo, extrato
+
+    if valor > 0:
+        if valor > limite:
+            print(
+                f"Operação falhou! O valor máximo para depósito diario é R$ {limite:.2f}.")
+            return
+        if saldo + valor > limite:
+            print(
+                f"Operação falhou! O saldo máximo permitido é para sua conta e R$ {limite:.2f}.")
+            return
+        # Verifica se o valor é positivo
+        if valor <= 0:
+            print(
+                "Operação falhou! O valor informado é inválido. Verique e tente novamente.")
+            return
+        # Realiza o depósito
+        saldo += valor
+        extrato += f"Depósito: R$ {valor:.2f}\n"
+
+        print("Depósito realizado com sucesso !")
+    else:
+        print("Operação falhou! O valor informado é inválido. Verifique e tente novamente.")
+
+
+def sacar_dinheiro(*, valor):
+    global saldo, extrato, numero_saques
+    if valor > 0:
+        if valor > limite:
+            print(
+                f"Operação falhou! O valor máximo para saque é R$ {limite:.2f}.")
+            return
+        if saldo < valor:
+            print("Operação falhou! Saldo insuficiente.")
+            return
+        if numero_saques >= LIMITE_SAQUES:
+            print(
+                f"Operação falhou! Número máximo de saques diários é {LIMITE_SAQUES}.")
+            return
+        # Realizar o saque
+        saldo -= valor
+        # armazena a operacao no extrato
+        extrato += f"Saque: R$ {valor:.2f}\n"
+        # Incrementa o número de saques
+        numero_saques += 1
+        print("saque realizado com sucesso!")
+    else:
+        print("Operação falhou! O valor informado é inválido.")
+
+
+def exibir_extrato(saldo, /, *, extrato=""):
+    if extrato == "":
+        print("Conta sem movimentacoes!")
+    else:
+        print(f"\n Extrato:")
+        print(extrato)
+    print(f"Saldo: R$ {saldo:.2f}\n")
+
+
+def new_user(usuarios):
+    cpf = input("Informe o CPF(somente numeros):")
+    usuario = existe_usuario(cpf, usuarios)
+
+    if usuario:
+        print("Usuario já cadastrado")
+        return
+
+    nome = input("informe o nome do usuario")
+    data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa)")
+    endereco = input(
+        "Informe o endereco (logradouro, numero - bairro - cidade/sigla estado): ")
+
+    usuarios.append({"nome": nome, "data_nascimento": data_nascimento,
+                    "cpf": cpf, "endereco": endereco})
+
+    print("usuario cadastrado com sucesso")
+
+
+def existe_usuario(cpf, usuarios):
+    user = [usuario for usuario in usuarios if usuario["cpf"] == cpf]
+    if user:
+        return user[0]
+    return None
+
+
+def newconta(agencia, numero_conta, user):
+    cpf = input("Informe o CPF do usuario para conta:  ")
+    usuario = existe_usuario(cpf, usuarios)
+
+    if usuario:
+        print("conta criada com sucesso")
+        return {"agencia": agencia, "numero_conta": numero_conta, "usuario": user}
+    print("Usuario náo encontrato, a conta nao foi criada. Verifique o CPF e tente novamente.")
+
+
+def contas_cadastradas(contas):
+    for conta in contas:
+        print(
+            f"Agência: {conta['agencia']}, "
+            f"Conta: {conta}, "
+            f"Titular: {conta['usuario']}"
+        )
+
+
+# Exibir o menu e processar as opções
+while True:
+    opcao = input(menu.upper()).upper()
+
+    if opcao == "D":
+        valor_deposito = float(input("Informe o valor do depósito: R$ "))
+        depositar_valor(valor_deposito)
+    elif opcao == "S":
+        valor_saque = float(input("Informe o valor do saque: R$ "))
+        sacar_dinheiro(valor=valor_saque)
+    elif opcao == "E":
+        exibir_extrato(saldo, extrato=extrato)
+    elif opcao == "U":
+        new_user(usuarios)
+    elif opcao == "C":
+        agencia = AGENCIA
+        contador += 1
+        conta = newconta(agencia, contador, usuarios)
+        if conta:
+            contas.append(conta)
+    elif opcao == "L":
+        contas_cadastradas(contas)
+    elif opcao == "Q":
+        print("Saindo...")
+        break
